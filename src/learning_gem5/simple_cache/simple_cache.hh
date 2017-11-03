@@ -30,9 +30,9 @@
 
 #ifndef __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__
 #define __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__
-#define FIFO 1
+#define FIFO 0
 #define SEQUENTIAL 0
-#define RANDOM 0
+#define RANDOM 1
 
 #include <unordered_map>
 

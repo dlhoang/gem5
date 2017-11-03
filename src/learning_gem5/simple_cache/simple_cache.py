@@ -48,7 +48,8 @@ system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set up the system
 system.mem_mode = 'timing'               # Use timing accesses
-system.mem_ranges = [AddrRange('512MB')] # Create an address range
+#system.mem_ranges = [AddrRange('512MB')] # Create an address range
+system.mem_ranges = [AddrRange('8192MB')] # Create an address range
 
 # Create a simple CPU
 system.cpu = TimingSimpleCPU()
@@ -86,7 +87,9 @@ system.system_port = system.membus.slave
 process = Process()
 # Set the command
 # cmd is a list which begins with the executable (like argv)
-process.cmd = ['tests/test-progs/hello/bin/x86/linux/hello']
+#process.cmd = ['tests/test-progs/hello/bin/x86/linux/hello']
+#process.cmd = ['tests/test-progs/gpu-hello/bin/x86/linux/gpu-hello']
+process.cmd = ['tests/test-progs/forktest/bin/fork']
 # Set the cpu to use the process as its workload and create thread contexts
 system.cpu.workload = process
 system.cpu.createThreads()
