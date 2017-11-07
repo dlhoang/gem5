@@ -71,9 +71,9 @@ system.cache.mem_side = system.membus.slave
 
 # create the interrupt controller for the CPU and connect to the membus
 system.cpu.createInterruptController()
-system.cpu.interrupts[0].pio = system.membus.master
-system.cpu.interrupts[0].int_master = system.membus.slave
-system.cpu.interrupts[0].int_slave = system.membus.master
+# system.cpu.interrupts[0].pio = system.membus.master
+# system.cpu.interrupts[0].int_master = system.membus.slave
+# system.cpu.interrupts[0].int_slave = system.membus.master
 
 # Create a DDR3 memory controller and connect it to the membus
 system.mem_ctrl = DDR3_1600_8x8()
@@ -87,9 +87,9 @@ system.system_port = system.membus.slave
 process = Process()
 # Set the command
 # cmd is a list which begins with the executable (like argv)
-#process.cmd = ['tests/test-progs/hello/bin/x86/linux/hello']
+#process.cmd = ['tests/test-progs/hello/bin/alpha/linux/hello']
 #process.cmd = ['tests/test-progs/gpu-hello/bin/x86/linux/gpu-hello']
-process.cmd = ['tests/test-progs/forktest/bin/fork']
+process.cmd = ['/Users/dihoang/Desktop/pipeline']
 # Set the cpu to use the process as its workload and create thread contexts
 system.cpu.workload = process
 system.cpu.createThreads()
