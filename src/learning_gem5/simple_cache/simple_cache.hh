@@ -29,10 +29,11 @@
  */
 
 #ifndef __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__
-#define __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__
-#define FIFO 1
+#define __LEARNING_GEM5_SIMPLE_kACHE_SIMPLE_CACHE_HH__
+#define FIFO 0
 #define SEQUENTIAL 0
-#define RANDOM 0
+#define RANDOM 1
+#define LRU 0
 
 #include <unordered_map>
 
@@ -293,6 +294,7 @@ class SimpleCache : public MemObject
     /// An incredibly simple cache storage. Maps block addresses to data
     std::unordered_map<Addr, uint8_t*> cacheStore;
 
+    // FIFO components
     struct node
     {
       Addr address;
@@ -304,6 +306,19 @@ class SimpleCache : public MemObject
 
     node *head;
     node *tail;
+
+    // LRU components
+    struct element
+    {
+        Addr address;
+        element *next;
+        element *prev;
+    };
+
+    void insertLRU (Addr address);
+    Addr deleteLRU();
+
+    element *lruHead = NULL;
 
     /**
      * Class for an event to delay handling a packet.

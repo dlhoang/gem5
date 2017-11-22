@@ -58,7 +58,7 @@ system.cpu = TimingSimpleCPU()
 system.membus = SystemXBar()
 
 # Create a simple cache
-system.cache = SimpleCache(size='1kB')
+system.cache = SimpleCache(size='64kB')
 
 # Connect the I and D cache ports of the CPU to the memobj.
 # Since cpu_side is a vector port, each time one of these is connected, it will
@@ -89,7 +89,17 @@ process = Process()
 # cmd is a list which begins with the executable (like argv)
 #process.cmd = ['tests/test-progs/hello/bin/alpha/linux/hello']
 #process.cmd = ['tests/test-progs/gpu-hello/bin/x86/linux/gpu-hello']
-process.cmd = ['/Users/dihoang/Desktop/pipeline']
+#process.cmd = ['/Users/dihoang/Desktop/pipeline']
+
+# Moved executables into gem5 folder
+process.cmd = ['tests/test-progs/hello/bin/alpha/linux/hello']
+#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/arrLoop']
+#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/intTypes']
+#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/processSpace']
+#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/ptrsStrings']
+#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/ptrsStruct']
+#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/factorial']
+
 # Set the cpu to use the process as its workload and create thread contexts
 system.cpu.workload = process
 system.cpu.createThreads()

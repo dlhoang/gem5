@@ -1,0 +1,44 @@
+arrLoopLRU8
+
+---------- Begin Simulation Statistics ----------
+sim_seconds                                  0.835352                       # Number of seconds simulated
+sim_ticks                                835351706000                       # Number of ticks simulated
+final_tick                               835351706000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_freq                                 1000000000000                       # Frequency of simulated ticks
+host_inst_rate                                 543212                       # Simulator instruction rate (inst/s)
+host_op_rate                                   543212                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            10310918913                       # Simulator tick rate (ticks/s)
+host_mem_usage                                9000444                       # Number of bytes of host memory used
+host_seconds                                    81.02                       # Real time elapsed on the host
+sim_insts                                    44008983                       # Number of instructions simulated
+sim_ops                                      44008983                       # Number of ops (including micro ops) simulated
+
+
+
+system.cache.pwrStateResidencyTicks::UNDEFINED 835351706000                       # Cumulative time (in ticks) in various power states
+system.cache.hits                            25009182                       # Number of hits
+system.cache.misses                          33004007                       # Number of misses
+system.cache.missLatency::samples            33004007                       # Ticks for misses to the cache
+system.cache.missLatency::mean           23552.852749                       # Ticks for misses to the cache
+system.cache.missLatency::gmean          23323.420732                       # Ticks for misses to the cache
+system.cache.missLatency::stdev           8385.870737                       # Ticks for misses to the cache
+system.cache.missLatency::0-65535            32898148     99.68%     99.68% # Ticks for misses to the cache
+system.cache.missLatency::65536-131071          92176      0.28%     99.96% # Ticks for misses to the cache
+system.cache.missLatency::131072-196607          1575      0.00%     99.96% # Ticks for misses to the cache
+system.cache.missLatency::196608-262143          6706      0.02%     99.98% # Ticks for misses to the cache
+system.cache.missLatency::262144-327679           161      0.00%     99.98% # Ticks for misses to the cache
+system.cache.missLatency::327680-393215           140      0.00%     99.98% # Ticks for misses to the cache
+system.cache.missLatency::393216-458751             2      0.00%     99.98% # Ticks for misses to the cache
+system.cache.missLatency::458752-524287            38      0.00%     99.98% # Ticks for misses to the cache
+system.cache.missLatency::524288-589823             0      0.00%     99.98% # Ticks for misses to the cache
+system.cache.missLatency::589824-655359          5061      0.02%    100.00% # Ticks for misses to the cache
+system.cache.missLatency::655360-720895             0      0.00%    100.00% # Ticks for misses to the cache
+system.cache.missLatency::720896-786431             0      0.00%    100.00% # Ticks for misses to the cache
+system.cache.missLatency::786432-851967             0      0.00%    100.00% # Ticks for misses to the cache
+system.cache.missLatency::851968-917503             0      0.00%    100.00% # Ticks for misses to the cache
+system.cache.missLatency::917504-983039             0      0.00%    100.00% # Ticks for misses to the cache
+system.cache.missLatency::983040-1.04858e+06            0      0.00%    100.00% # Ticks for misses to the cache
+system.cache.missLatency::total              33004007                       # Ticks for misses to the cache
+system.cache.hitRatio                        0.431095                       # The ratio of hits to the total accesses to the cache
+system.membus.pkt_count_system.cache.mem_side::system.mem_ctrl.port     99011893                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_size_system.cache.mem_side::system.mem_ctrl.port   4224504704                       # Cumulative packet size per connected master and slave (bytes)

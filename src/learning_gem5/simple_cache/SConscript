@@ -33,3 +33,4 @@ SimObject('SimpleCache.py')
 Source('simple_cache.cc')
 
 DebugFlag('SimpleCache')
+DebugFlag('Insert')

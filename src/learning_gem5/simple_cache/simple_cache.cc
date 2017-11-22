@@ -31,6 +31,7 @@
 #include "learning_gem5/simple_cache/simple_cache.hh"
 
 #include "base/random.hh"
+#include "debug/Insert.hh"
 #include "debug/SimpleCache.hh"
 #include "sim/system.hh"
 
@@ -382,6 +383,7 @@ SimpleCache::accessFunctional(PacketPtr pkt)
 void
 SimpleCache::insert(PacketPtr pkt)
 {
+    DPRINTF(Insert, "========  INSERT  =================\n");
     // The packet should be aligned.
     assert(pkt->getAddr() ==  pkt->getBlockAddr(blockSize));
     // The address should not be in the cache
@@ -390,6 +392,8 @@ SimpleCache::insert(PacketPtr pkt)
     assert(pkt->isResponse());
 
     if (cacheStore.size() >= capacity) {
+        DPRINTF(Insert, "cacheStore.size() %d  capacity %d\n",
+                        cacheStore.size(), capacity);
         // Select random thing to evict. This is a little convoluted since we
         // are using a std::unordered_map. See http://bit.ly/2hrnLP2
         int bucket;
@@ -397,10 +401,10 @@ SimpleCache::insert(PacketPtr pkt)
         int number = 0;
         Addr addressToDelete;
 
-        if (FIFO) {
-            addressToDelete = deleteLinkedList();
+        if (LRU) {
+            addressToDelete = deleteLRU();
             auto block = cacheStore.find(addressToDelete);
-            DPRINTF(SimpleCache, "Removing addr %#x\n", block->first);
+            DPRINTF(Insert, "Removing addr %#x\n", block->first);
 
             // Write back the data.
             // Create a new request-packet pair
@@ -409,7 +413,27 @@ SimpleCache::insert(PacketPtr pkt)
                                            MemCmd::WritebackDirty, blockSize);
             new_pkt->dataDynamic(block->second); // This will be deleted later
 
-            DPRINTF(SimpleCache, "Writing packet back %s\n", pkt->print());
+            DPRINTF(Insert, "Writing packet back %s\n", pkt->print());
+            // Send the write to memory
+            memPort.sendTimingReq(new_pkt);
+
+            // Delete this entry
+            cacheStore.erase(block->first);
+        }
+
+        if (FIFO) {
+            addressToDelete = deleteLinkedList();
+            auto block = cacheStore.find(addressToDelete);
+            DPRINTF(Insert, "Removing addr %#x\n", block->first);
+
+            // Write back the data.
+            // Create a new request-packet pair
+            RequestPtr req = new Request(block->first, blockSize, 0, 0);
+            PacketPtr new_pkt = new Packet(req,
+                                           MemCmd::WritebackDirty, blockSize);
+            new_pkt->dataDynamic(block->second); // This will be deleted later
+
+            DPRINTF(Insert, "Writing packet back %s\n", pkt->print());
             // Send the write to memory
             memPort.sendTimingReq(new_pkt);
 
@@ -420,9 +444,10 @@ SimpleCache::insert(PacketPtr pkt)
         if (SEQUENTIAL) {
             do {
                 bucket = number++;
+                DPRINTF(Insert, "Bucket %d\n", bucket);
             } while ( (bucket_size = cacheStore.bucket_size(bucket)) == 0 );
             auto block = std::next(cacheStore.begin(bucket), 0);
-            DPRINTF(SimpleCache, "Removing addr %#x\n", block->first);
+            DPRINTF(Insert, "Removing addr %#x\n", block->first);
 
             // Write back the data.
             // Create a new request-packet pair
@@ -431,7 +456,7 @@ SimpleCache::insert(PacketPtr pkt)
                                            MemCmd::WritebackDirty, blockSize);
             new_pkt->dataDynamic(block->second); // This will be deleted later
 
-            DPRINTF(SimpleCache, "Writing packet back %s\n", pkt->print());
+            DPRINTF(Insert, "Writing packet back %s\n", pkt->print());
             // Send the write to memory
             memPort.sendTimingReq(new_pkt);
 
@@ -441,12 +466,33 @@ SimpleCache::insert(PacketPtr pkt)
 
         else if (RANDOM) {
             do {
+                //Get a random bucket
+                //bucket_count returns the number of
+                //buckets in the unordered_map
                 bucket = random_mt.random(0,
                                           (int)cacheStore.bucket_count() - 1);
+                DPRINTF(Insert, "Bucket: %d\n", bucket);
+                DPRINTF(Insert, "Number of buckets: %d\n",
+                                cacheStore.bucket_count());
+                DPRINTF(Insert, "Max size: %d\n", cacheStore.max_size());
+                DPRINTF(Insert, "Elements in bucket %d: %d\n",
+                                bucket, cacheStore.bucket_size(bucket));
+                //If that bucket has no elements, get another bucket
+                //bucket_size(n) returns the number of elements in bucket n
             } while ( (bucket_size = cacheStore.bucket_size(bucket)) == 0 );
+            //cacheStore.begin(bucket) is an iterator to the elements
+            //in the bucket
+            //next uses this iterator to advance to a random next element
+            //bucket_size returns the number of elements in the bucket
             auto block = std::next(cacheStore.begin(bucket),
                                    random_mt.random(0, bucket_size - 1));
-            DPRINTF(SimpleCache, "Removing addr %#x\n", block->first);
+            //iterator block points to an element in the map
+            //an element is a <key, value> pair
+            //block->first gets the key
+            //block->second gets the value
+            DPRINTF(Insert,
+                            "Removing addr %#x which contains value: %#x\n",
+                            block->first, block->second);
 
             // Write back the data.
             // Create a new request-packet pair
@@ -455,17 +501,24 @@ SimpleCache::insert(PacketPtr pkt)
                                            MemCmd::WritebackDirty, blockSize);
             new_pkt->dataDynamic(block->second); // This will be deleted later
 
-            DPRINTF(SimpleCache, "Writing packet back %s\n", pkt->print());
+            DPRINTF(Insert, "Writing packet back %s\n", pkt->print());
             // Send the write to memory
             memPort.sendTimingReq(new_pkt);
 
             // Delete this entry
             cacheStore.erase(block->first);
         }
+
     }
 
-    DPRINTF(SimpleCache, "Inserting %s\n", pkt->print());
-    DDUMP(SimpleCache, pkt->getConstPtr<uint8_t>(), blockSize);
+    //Print the cacheStore
+    DPRINTF(Insert, "-------------  CacheStore -------------\n");
+    for (auto it : cacheStore)
+       DPRINTF(Insert, "first: %x second %x\n", it.first, it.second);
+    DPRINTF(Insert, "-------------  End CacheStore -------------\n");
+
+    DPRINTF(Insert, "Inserting %s\n", pkt->print());
+    //DDUMP(Insert, pkt->getConstPtr<uint8_t>(), blockSize);
 
     // Allocate space for the cache block data
     uint8_t *data = new uint8_t[blockSize];
@@ -476,8 +529,13 @@ SimpleCache::insert(PacketPtr pkt)
     // Insert into linked list
     insertLinkedList(pkt->getAddr());
 
+    // Insert into LRU list
+    insertLRU(pkt->getAddr());
+
     // Write the data into the cache
     pkt->writeDataToBlock(data, blockSize);
+
+    DPRINTF(Insert, "===========  END INSERT  ==========\n\n");
 }
 
 void
@@ -489,6 +547,7 @@ SimpleCache::insertLinkedList(Addr address)
 
     if (head == NULL)
     {
+        //DPRINTF(Insert, "head == NULL\n");
         head = temp;
         tail = temp;
         temp = NULL;
@@ -500,6 +559,7 @@ SimpleCache::insertLinkedList(Addr address)
     }
 }
 
+// Deletes from the head of the list
 Addr
 SimpleCache::deleteLinkedList()
 {
@@ -512,10 +572,71 @@ SimpleCache::deleteLinkedList()
     return address;
 }
 
+//Insert into LRU list, find element if present and move to head of list
+void
+SimpleCache::insertLRU(Addr address)
+{
+    element *temp;
+    int found = 0;
+    // If this address is in the list, move it to the head
+    temp = lruHead;
+    while (temp) {
+        if (temp->address == address) {
+            found = 1;
+            //Element already at Head - Do Nothing
+            if (temp->prev == NULL) {
+                return;
+            }
+            //Else element in middle or end
+            temp->prev->next = temp->next;
+            if (temp->next) {
+                temp->next->prev = temp->prev;
+            }
+            break;
+        }
+        temp = temp->next;
+    }
+    // Make a new element and add it to the head of the list
+    if (!found) {
+        temp = new element;
+        temp->address = address;
+    }
+    temp->next = lruHead;
+    temp->prev = NULL;
+    lruHead = temp;
+
+}
+
+//Delete from the end of the list - should be the least recently used
+//List must not be empty
+Addr
+SimpleCache::deleteLRU()
+{
+    element *curr = lruHead;
+    element *temp = curr, *last = curr;
+
+    while (curr) {
+        temp = curr->prev;
+        last = curr;
+        curr = curr->next;
+    }
+    Addr address = last->address;
+    if (temp) {
+        temp->next = NULL;
+    }
+    // There was a single element in list
+    else {
+        lruHead = NULL;
+    }
+
+    delete last;
+    return address;
+}
+
 AddrRangeList
 SimpleCache::getAddrRanges() const
 {
-    DPRINTF(SimpleCache, "Sending new ranges\n");
+    //DPRINTF(SimpleCache, "Sending new ranges\n");
     // Just use the same ranges as whatever is on the memory side.
     return memPort.getAddrRanges();
 }

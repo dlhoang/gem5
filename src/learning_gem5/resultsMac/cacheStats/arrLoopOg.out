@@ -1,0 +1,21 @@
+arrLoopOg
+
+---------- Begin Simulation Statistics ----------
+sim_seconds                                  0.022005                       # Number of seconds simulated
+sim_ticks                                 22005196000                       # Number of ticks simulated
+final_tick                                22005196000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_freq                                 1000000000000                       # Frequency of simulated ticks
+host_inst_rate                                3044806                       # Simulator instruction rate (inst/s)
+host_op_rate                                  3044804                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1522451304                       # Simulator tick rate (ticks/s)
+host_mem_usage                           18014398508325524                       # Number of bytes of host memory used
+host_seconds                                    14.45                       # Real time elapsed on the host
+sim_insts                                    44008943                       # Number of instructions simulated
+sim_ops                                      44008943                       # Number of ops (including micro ops) simulated
+
+
+
+system.membus.pkt_count_system.cpu.icache_port::system.mem_ctrls.port     88020748                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.mem_ctrls.port     28005540                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.icache_port::system.mem_ctrls.port    176041496                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.mem_ctrls.port     56021412                       # Cumulative packet size per connected master and slave (bytes)
