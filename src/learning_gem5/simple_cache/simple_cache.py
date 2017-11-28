@@ -58,7 +58,7 @@ system.cpu = TimingSimpleCPU()
 system.membus = SystemXBar()
 
 # Create a simple cache
-system.cache = SimpleCache(size='32kB')
+system.cache = SimpleCache(size='1kB')
 
 # Connect the I and D cache ports of the CPU to the memobj.
 # Since cpu_side is a vector port, each time one of these is connected, it will
@@ -93,9 +93,9 @@ process = Process()
 
 # Moved executables into gem5 folder
 #process.cmd = ['tests/test-progs/hello/bin/alpha/linux/hello']
-#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/arrLoop']
+process.cmd = ['tests/test-progs/cprogs/alphaExecutables/arrLoop']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/intTypes']
-process.cmd = ['tests/test-progs/cprogs/alphaExecutables/processSpace']
+#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/processSpace']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/ptrsStrings']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/ptrsStruct']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/factorial']
