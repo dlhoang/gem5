@@ -421,7 +421,7 @@ SimpleCache::insert(PacketPtr pkt)
             cacheStore.erase(block->first);
         }
 
-        if (FIFO) {
+        else if (FIFO) {
             addressToDelete = deleteLinkedList();
             auto block = cacheStore.find(addressToDelete);
             DPRINTF(Insert, "Removing addr %#x\n", block->first);
@@ -441,7 +441,7 @@ SimpleCache::insert(PacketPtr pkt)
             cacheStore.erase(block->first);
         }
 
-        if (SEQUENTIAL) {
+        else if (SEQUENTIAL) {
             do {
                 bucket = number++;
                 DPRINTF(Insert, "Bucket %d\n", bucket);
