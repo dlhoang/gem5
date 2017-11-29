@@ -530,7 +530,10 @@ SimpleCache::insert(PacketPtr pkt)
     insertLinkedList(pkt->getAddr());
 
     // Insert into LRU list
-    insertLRU(pkt->getAddr());
+    if (LRU)
+    {
+        insertLRU(pkt->getAddr());
+    }
 
     // Write the data into the cache
     pkt->writeDataToBlock(data, blockSize);
