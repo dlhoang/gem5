@@ -35,6 +35,10 @@
 #include "debug/SimpleCache.hh"
 #include "sim/system.hh"
 
+using namespace std;
+
+SimpleCache::LRUCache cache(1);
+
 SimpleCache::SimpleCache(SimpleCacheParams *params) :
     MemObject(params),
     latency(params->latency),
@@ -50,6 +54,8 @@ SimpleCache::SimpleCache(SimpleCacheParams *params) :
     for (int i = 0; i < params->port_cpu_side_connection_count; ++i) {
         cpuPorts.emplace_back(name() + csprintf(".cpu_side[%d]", i), i, this);
     }
+
+    cache.setCapacity(capacity);
 }
 
 BaseMasterPort&
@@ -363,23 +369,6 @@ SimpleCache::accessFunctional(PacketPtr pkt)
     return false;
 }
 
-//void evict(const_iterator block) {
-//    DPRINTF(SimpleCache, "Removing addr %#x\n", block->first);
-//
-//    // Write back the data.
-//    // Create a new request-packet pair
-//    RequestPtr req = new Request(block->first, blockSize, 0, 0);
-//    PacketPtr new_pkt = new Packet(req, MemCmd::WritebackDirty, blockSize);
-//    new_pkt->dataDynamic(block->second); // This will be deleted later
-//
-//    DPRINTF(SimpleCache, "Writing packet back %s\n", pkt->print());
-//    // Send the write to memory
-//    memPort.sendTimingReq(new_pkt);
-//
-//    // Delete this entry
-//    cacheStore.erase(block->first);
-//}
-
 void
 SimpleCache::insert(PacketPtr pkt)
 {
@@ -391,6 +380,9 @@ SimpleCache::insert(PacketPtr pkt)
     // The pkt should be a response
     assert(pkt->isResponse());
 
+    // if element is already in map or not
+    int exists = 0;
+
     if (cacheStore.size() >= capacity) {
         DPRINTF(Insert, "cacheStore.size() %d  capacity %d\n",
                         cacheStore.size(), capacity);
@@ -400,31 +392,20 @@ SimpleCache::insert(PacketPtr pkt)
         int bucket_size;
         int number = 0;
         Addr addressToDelete;
+        if (FIFO) {
 
-        if (LRU) {
-            addressToDelete = deleteLRU();
-            auto block = cacheStore.find(addressToDelete);
-            DPRINTF(Insert, "Removing addr %#x\n", block->first);
+            auto block = cacheStore.find(pkt->getAddr());
 
-            // Write back the data.
-            // Create a new request-packet pair
-            RequestPtr req = new Request(block->first, blockSize, 0, 0);
-            PacketPtr new_pkt = new Packet(req,
-                                           MemCmd::WritebackDirty, blockSize);
-            new_pkt->dataDynamic(block->second); // This will be deleted later
-
-            DPRINTF(Insert, "Writing packet back %s\n", pkt->print());
-            // Send the write to memory
-            memPort.sendTimingReq(new_pkt);
-
-            // Delete this entry
-            cacheStore.erase(block->first);
-        }
-
-        else if (FIFO) {
-            addressToDelete = deleteFIFO();
-            auto block = cacheStore.find(addressToDelete);
-            DPRINTF(Insert, "Removing addr %#x\n", block->first);
+            // doesn't exist in map, we need to evict something
+            if (block == cacheStore.end())
+            {
+                addressToDelete = deleteFIFO();
+                block = cacheStore.find(addressToDelete);
+                DPRINTF(Insert, "Removing addr %#x\n", block->first);
+            }
+            else {
+                exists = 1;
+            }
 
             // Write back the data.
             // Create a new request-packet pair
@@ -544,10 +525,8 @@ SimpleCache::insert(PacketPtr pkt)
     // Allocate space for the cache block data
     uint8_t *data = new uint8_t[blockSize];
 
-    // Insert the data and address into the cache store
-    cacheStore[pkt->getAddr()] = data;
-
-    if (FIFO)
+    // if element is already in map, don't insert into linked list
+    if (FIFO && !exists)
     {
         // Insert into linked list
         insertFIFO(pkt->getAddr());
@@ -562,8 +541,32 @@ SimpleCache::insert(PacketPtr pkt)
     // Insert into LRU list
     else if (LRU)
     {
-        insertLRU(pkt->getAddr());
+        LRUNode *temp = cache.put(pkt->getAddr(), data);
+
+        // filled capacity
+        if (temp != NULL) {
+            Addr addressToDelete = temp->key;
+            auto block = cacheStore.find(addressToDelete);
+            DPRINTF(Insert, "Removing addr %#x\n", block->first);
+
+            // Write back the data.
+            // Create a new request-packet pair
+            RequestPtr req = new Request(block->first, blockSize, 0, 0);
+            PacketPtr new_pkt = new Packet(req,
+                                           MemCmd::WritebackDirty, blockSize);
+            new_pkt->dataDynamic(block->second); // This will be deleted later
+
+            DPRINTF(Insert, "Writing packet back %s\n", pkt->print());
+            // Send the write to memory
+            memPort.sendTimingReq(new_pkt);
+
+            // Delete this entry
+            cacheStore.erase(block->first);
+        }
     }
+
+    // Insert the data and address into the cache store
+    cacheStore[pkt->getAddr()] = data;
 
     // Write the data into the cache
     pkt->writeDataToBlock(data, blockSize);
@@ -653,67 +656,6 @@ SimpleCache::deleteFILO()
     return address;
 }
 
-//Insert into LRU list, find element if present and move to head of list
-void
-SimpleCache::insertLRU(Addr address)
-{
-    element *temp;
-    int found = 0;
-    // If this address is in the list, move it to the head
-    temp = lruHead;
-    while (temp) {
-        if (temp->address == address) {
-            found = 1;
-            //Element already at Head - Do Nothing
-            if (temp->prev == NULL) {
-                return;
-            }
-            //Else element in middle or end
-            temp->prev->next = temp->next;
-            if (temp->next) {
-                temp->next->prev = temp->prev;
-            }
-            break;
-        }
-        temp = temp->next;
-    }
-    // Make a new element and add it to the head of the list
-    if (!found) {
-        temp = new element;
-        temp->address = address;
-    }
-    temp->next = lruHead;
-    temp->prev = NULL;
-    lruHead = temp;
-
-}
-
-//Delete from the end of the list - should be the least recently used
-//List must not be empty
-Addr
-SimpleCache::deleteLRU()
-{
-    element *curr = lruHead;
-    element *temp = curr, *last = curr;
-
-    while (curr) {
-        temp = curr->prev;
-        last = curr;
-        curr = curr->next;
-    }
-    Addr address = last->address;
-    if (temp) {
-        temp->next = NULL;
-    }
-    // There was a single element in list
-    else {
-        lruHead = NULL;
-    }
-
-    delete last;
-    return address;
-}
-
 AddrRangeList
 SimpleCache::getAddrRanges() const
 {
@@ -762,4 +704,127 @@ SimpleCache*
 SimpleCacheParams::create()
 {
     return new SimpleCache(this);
+}
+
+bool
+SimpleCache::DoublyLinkedList::isEmpty() {
+    return rear == NULL;
+}
+
+SimpleCache::LRUNode*
+SimpleCache::DoublyLinkedList::add_page_to_head(Addr key, uint8_t *value) {
+    LRUNode *page = new LRUNode(key, value);
+    if (!front && !rear)
+    {
+        front = rear = page;
+    }
+    else
+    {
+        page->next = front;
+        front->prev = page;
+        front = page;
+    }
+    return page;
+}
+
+void
+SimpleCache::DoublyLinkedList::move_page_to_head(LRUNode *page) {
+    if (page==front) {
+        return;
+    }
+    if (page == rear) {
+        rear = rear->prev;
+        rear->next = NULL;
+    }
+    else {
+        page->prev->next = page->next;
+        page->next->prev = page->prev;
+    }
+
+    page->next = front;
+    page->prev = NULL;
+    front->prev = page;
+    front = page;
+}
+
+SimpleCache::LRUNode *
+SimpleCache::DoublyLinkedList::remove_rear_page() {
+    LRUNode *retNode;
+    if (isEmpty())
+    {
+        return NULL;
+    }
+    if (front == rear)
+    {
+        retNode = rear;
+        //delete rear;
+        front = rear = NULL;
+    }
+    else
+    {
+        //LRUNode *temp = rear;
+        retNode = rear;
+        rear = rear->prev;
+        rear->next = NULL;
+        //delete temp;
+    }
+    return retNode;
+}
+
+SimpleCache::LRUNode*
+SimpleCache::DoublyLinkedList::get_rear_page() {
+    return rear;
+}
+
+
+SimpleCache::LRUCache::LRUCache(int capacity) {
+    this->capacity = capacity;
+    size = 0;
+    pageList = new DoublyLinkedList();
+    pageMap = map<Addr, LRUNode*>();
+}
+
+uint8_t*
+SimpleCache::LRUCache::get(Addr key) {
+    if (pageMap.find(key)==pageMap.end()) {
+        return NULL;
+    }
+    uint8_t *val = pageMap[key]->value;
+
+    // move the page to front
+    pageList->move_page_to_head(pageMap[key]);
+    return val;
+}
+
+SimpleCache::LRUNode *
+SimpleCache::LRUCache::put(Addr key, uint8_t *value) {
+
+    LRUNode *temp = NULL;
+
+    if (pageMap.find(key)!=pageMap.end()) {
+        // if key already present, update value and move page to head
+        pageMap[key]->value = value;
+        pageList->move_page_to_head(pageMap[key]);
+        return temp;
+    }
+
+    if (size == capacity) {
+        // remove rear page
+        Addr k = pageList->get_rear_page()->key;
+        pageMap.erase(k);
+        temp = pageList->remove_rear_page();
+        size--;
+    }
+
+    // add new page to head to Queue
+    LRUNode *page = pageList->add_page_to_head(key, value);
+    size++;
+    pageMap[key] = page;
+
+    return temp;
+}
+
+void
+SimpleCache::LRUCache::setCapacity(int capacity) {
+    this->capacity = capacity;
 }
