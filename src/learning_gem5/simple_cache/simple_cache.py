@@ -92,8 +92,8 @@ process = Process()
 #process.cmd = ['/Users/dihoang/Desktop/pipeline']
 
 # Moved executables into gem5 folder
-process.cmd = ['tests/test-progs/hello/bin/alpha/linux/hello']
-#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/arrLoop']
+#process.cmd = ['tests/test-progs/hello/bin/alpha/linux/hello']
+process.cmd = ['tests/test-progs/cprogs/alphaExecutables/arrLoop']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/intTypes']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/processSpace']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/ptrsStrings']

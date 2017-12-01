@@ -30,10 +30,11 @@
 
 #ifndef __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__
 #define __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__
-#define FIFO 0
-#define SEQUENTIAL 1
+#define FIFO 1
+#define SEQUENTIAL 0
 #define RANDOM 0
 #define LRU 0
+#define FILO 0
 
 #include <unordered_map>
 
@@ -299,13 +300,18 @@ class SimpleCache : public MemObject
     {
       Addr address;
       node *next;
+      node *prev;
     };
 
-    void insertLinkedList(Addr address);
-    Addr deleteLinkedList();
+    void insertFIFO(Addr address);
+    Addr deleteFIFO();
 
     node *head;
     node *tail;
+
+    void insertFILO(Addr address);
+    Addr deleteFILO();
+    node *filoHead;
 
     // LRU components
     struct element

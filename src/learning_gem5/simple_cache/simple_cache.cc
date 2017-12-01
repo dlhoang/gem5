@@ -422,7 +422,7 @@ SimpleCache::insert(PacketPtr pkt)
         }
 
         else if (FIFO) {
-            addressToDelete = deleteLinkedList();
+            addressToDelete = deleteFIFO();
             auto block = cacheStore.find(addressToDelete);
             DPRINTF(Insert, "Removing addr %#x\n", block->first);
 
@@ -439,6 +439,27 @@ SimpleCache::insert(PacketPtr pkt)
 
             // Delete this entry
             cacheStore.erase(block->first);
+        }
+
+        else if (FILO) {
+            addressToDelete = deleteFILO();
+            auto block = cacheStore.find(addressToDelete);
+            DPRINTF(Insert, "Removing addr %#x\n", block->first);
+
+            // Write back the data.
+            // Create a new request-packet pair
+            RequestPtr req = new Request(block->first, blockSize, 0, 0);
+            PacketPtr new_pkt = new Packet(req,
+                                           MemCmd::WritebackDirty, blockSize);
+            new_pkt->dataDynamic(block->second); // This will be deleted later
+
+            DPRINTF(Insert, "Writing packet back %s\n", pkt->print());
+            // Send the write to memory
+            memPort.sendTimingReq(new_pkt);
+
+            // Delete this entry
+            cacheStore.erase(block->first);
+
         }
 
         else if (SEQUENTIAL) {
@@ -526,11 +547,20 @@ SimpleCache::insert(PacketPtr pkt)
     // Insert the data and address into the cache store
     cacheStore[pkt->getAddr()] = data;
 
-    // Insert into linked list
-    insertLinkedList(pkt->getAddr());
+    if (FIFO)
+    {
+        // Insert into linked list
+        insertFIFO(pkt->getAddr());
+    }
+
+    else if (FILO)
+    {
+        // Insert into linked list
+        insertFILO(pkt->getAddr());
+    }
 
     // Insert into LRU list
-    if (LRU)
+    else if (LRU)
     {
         insertLRU(pkt->getAddr());
     }
@@ -541,37 +571,85 @@ SimpleCache::insert(PacketPtr pkt)
     DPRINTF(Insert, "===========  END INSERT  ==========\n\n");
 }
 
+// Adds to head of the list
 void
-SimpleCache::insertLinkedList(Addr address)
+SimpleCache::insertFIFO(Addr address)
 {
     node *temp = new node;
     temp->address = address;
     temp->next = NULL;
+    temp->prev = NULL;
 
     if (head == NULL)
     {
         //DPRINTF(Insert, "head == NULL\n");
         head = temp;
         tail = temp;
-        temp = NULL;
     }
     else
     {
         temp->next = head;
+        head->prev = temp;
         head = temp;
     }
 }
 
-// Deletes from the head of the list
+// Deletes from the tail of the list
 Addr
-SimpleCache::deleteLinkedList()
+SimpleCache::deleteFIFO()
 {
-    node *curr = head;
-    node *temp = head->next;
+    assert(tail != NULL);
+
+    node *curr = tail;
     Addr address = curr->address;
-    head = temp;
+
+    node *temp = tail->prev;
+    if (temp != NULL)
+    {
+        temp->next = NULL;
+    }
+    tail = temp;
+
+    if (tail == NULL)
+    {
+        head = NULL;
+    }
     delete curr;
 
+    return address;
+}
+
+// Adds to head of the list
+void
+SimpleCache::insertFILO(Addr address)
+{
+    node *temp = new node;
+    temp->address = address;
+    temp->next = NULL;
+
+    if (filoHead == NULL)
+    {
+        filoHead = temp;
+    }
+    else
+    {
+        temp->next = filoHead;
+        filoHead = temp;
+    }
+}
+
+// Deletes from head of the list
+Addr
+SimpleCache::deleteFILO()
+{
+    assert(filoHead != NULL);
+
+    node *curr = filoHead;
+    Addr address = curr->address;
+
+    filoHead = filoHead->next;
+
+    delete curr;
     return address;
 }
 
