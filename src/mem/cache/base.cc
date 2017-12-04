@@ -51,9 +51,9 @@
 #include "debug/Drain.hh"
 #include "mem/cache/cache.hh"
 #include "mem/cache/mshr.hh"
-#include "mem/cache/tags/fa_lru.hh"
-#include "mem/cache/tags/lru.hh"
-#include "mem/cache/tags/random_repl.hh"
+#include "mem/cache/tags/fa_lru.hh" /* Fully Associative LRU cache policy */
+#include "mem/cache/tags/lru.hh"         /* LRU cache replacement policy */
+#include "mem/cache/tags/random_repl.hh" /* Random cache replacement policy */
 #include "sim/full_system.hh"
 
 using namespace std;

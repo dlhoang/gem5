@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int main() {
-    int r = 100, c = 100, i, j, count;
+    int r = 50, c = 50, i, j, count;
 
     int *arr[r];
     for (i=0; i<r; i++) {
@@ -18,15 +18,15 @@ int main() {
 
     for (i = 0; i < r; i++) {
         for (j = 0; j < c; j++) {
-            printf("%d\n", arr[j][i]);
+            printf("%d\n", arr[i][j]);
         }
     }
 
     for (i = 0; i < r; i++) {
         for (j = 0; j < c; j++) {
-            printf("%d\n", arr[j][i]);
+            printf("%d\n", arr[i][j]);
         }
     }
 
-    return 0;
+   return 0;
 }

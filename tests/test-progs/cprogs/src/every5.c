@@ -17,16 +17,16 @@ int main() {
     }
 
     for (i = 0; i < r; i++) {
-        for (j = 0; j < c; j++) {
-            printf("%d\n", arr[j][i]);
+        for (j = 0; j < c; j += 5) {
+            printf("arr[%d][%d]: %d\n", i, j, arr[i][j]);
         }
     }
 
     for (i = 0; i < r; i++) {
         for (j = 0; j < c; j++) {
-            printf("%d\n", arr[j][i]);
+            printf("%d\n", arr[i][j]);
         }
     }
 
-    return 0;
+   return 0;
 }
