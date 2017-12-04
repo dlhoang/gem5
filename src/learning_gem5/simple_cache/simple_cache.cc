@@ -380,9 +380,6 @@ SimpleCache::insert(PacketPtr pkt)
     // The pkt should be a response
     assert(pkt->isResponse());
 
-    // if element is already in map or not
-    int exists = 0;
-
     if (cacheStore.size() >= capacity) {
         DPRINTF(Insert, "cacheStore.size() %d  capacity %d\n",
                         cacheStore.size(), capacity);
@@ -392,20 +389,11 @@ SimpleCache::insert(PacketPtr pkt)
         int bucket_size;
         int number = 0;
         Addr addressToDelete;
+
         if (FIFO) {
-
-            auto block = cacheStore.find(pkt->getAddr());
-
-            // doesn't exist in map, we need to evict something
-            if (block == cacheStore.end())
-            {
-                addressToDelete = deleteFIFO();
-                block = cacheStore.find(addressToDelete);
-                DPRINTF(Insert, "Removing addr %#x\n", block->first);
-            }
-            else {
-                exists = 1;
-            }
+            addressToDelete = deleteFIFO();
+            auto block = cacheStore.find(addressToDelete);
+            DPRINTF(Insert, "Removing addr %#x\n", block->first);
 
             // Write back the data.
             // Create a new request-packet pair
@@ -525,8 +513,7 @@ SimpleCache::insert(PacketPtr pkt)
     // Allocate space for the cache block data
     uint8_t *data = new uint8_t[blockSize];
 
-    // if element is already in map, don't insert into linked list
-    if (FIFO && !exists)
+    if (FIFO)
     {
         // Insert into linked list
         insertFIFO(pkt->getAddr());
