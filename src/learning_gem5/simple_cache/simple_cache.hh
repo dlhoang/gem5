@@ -30,8 +30,8 @@
 
 #ifndef __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__
 #define __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__
-#define FIFO 1
-#define SEQUENTIAL 0
+#define FIFO 0
+#define SEQUENTIAL 1
 #define RANDOM 0
 #define LRU 0
 #define FILO 0
@@ -319,10 +319,9 @@ class SimpleCache : public MemObject
     class LRUNode {
         public:
         Addr key;
-        uint8_t *value;
         LRUNode *prev, *next;
-        LRUNode(Addr k, uint8_t *v):
-            key(k), value(v), prev(NULL), next(NULL) {}
+        LRUNode(Addr k):
+            key(k), prev(NULL), next(NULL) {}
     };
 
     public:
@@ -332,14 +331,15 @@ class SimpleCache : public MemObject
 
     public:
         DoublyLinkedList(): front(NULL), rear(NULL) {}
-        LRUNode* add_page_to_head(Addr key, uint8_t *value);
+        LRUNode* add_page_to_head(Addr key);
         void move_page_to_head(LRUNode *page);
         LRUNode *remove_rear_page();
-        LRUNode* get_rear_page();
+        LRUNode *get_rear_page();
     };
 
     public:
     class LRUCache {
+        public:
         int capacity, size;
         DoublyLinkedList *pageList;
         map<Addr, LRUNode*> pageMap;
@@ -347,8 +347,9 @@ class SimpleCache : public MemObject
     public:
         LRUCache(int capacity);
         void setCapacity(int capacity);
-        uint8_t *get(Addr key);
+        // uint8_t *get(Addr key);
         LRUNode *put(Addr key, uint8_t *value);
+        Addr rearrange_list(Addr key);
     };
 
     /**

@@ -101,8 +101,8 @@ process = Process()
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/column']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/row']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/row50']
-#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/backwardsrow50']
-process.cmd = ['tests/test-progs/cprogs/alphaExecutables/print1st']
+process.cmd = ['tests/test-progs/cprogs/alphaExecutables/backwardsrow50']
+#process.cmd = ['tests/test-progs/cprogs/alphaExecutables/print1st']
 #process.cmd = ['tests/test-progs/cprogs/alphaExecutables/factorial']
 
 # Set the cpu to use the process as its workload and create thread contexts

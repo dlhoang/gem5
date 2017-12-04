@@ -305,6 +305,9 @@ SimpleCache::accessTiming(PacketPtr pkt)
         DDUMP(SimpleCache, pkt->getConstPtr<uint8_t>(), pkt->getSize());
         pkt->makeResponse();
         sendResponse(pkt);
+        if (LRU) {
+            cache.rearrange_list(pkt->getAddr());
+        }
     } else {
         misses++; // update stats
         missTime = curTick();
@@ -528,13 +531,19 @@ SimpleCache::insert(PacketPtr pkt)
     // Insert into LRU list
     else if (LRU)
     {
+        // put new entry in LRU cache
         LRUNode *temp = cache.put(pkt->getAddr(), data);
 
-        // filled capacity
-        if (temp != NULL) {
+        // filled capacity, tail gets returned
+        if (cacheStore.size() >= capacity) {
+            DPRINTF(SimpleCache, "%#x\n", temp->key);
             Addr addressToDelete = temp->key;
+
+            if (cacheStore.find(addressToDelete) == cacheStore.end()) {
+                DPRINTF(SimpleCache, "NOT FOUND IN CACHESTORE\n");
+            }
             auto block = cacheStore.find(addressToDelete);
-            DPRINTF(Insert, "Removing addr %#x\n", block->first);
+            DPRINTF(SimpleCache, "Removing addr %#x\n", block->first);
 
             // Write back the data.
             // Create a new request-packet pair
@@ -554,6 +563,7 @@ SimpleCache::insert(PacketPtr pkt)
 
     // Insert the data and address into the cache store
     cacheStore[pkt->getAddr()] = data;
+    DPRINTF(SimpleCache, "INSERTING INTO CACHESTORE: %#x\n", pkt->getAddr());
 
     // Write the data into the cache
     pkt->writeDataToBlock(data, blockSize);
@@ -699,8 +709,8 @@ SimpleCache::DoublyLinkedList::isEmpty() {
 }
 
 SimpleCache::LRUNode*
-SimpleCache::DoublyLinkedList::add_page_to_head(Addr key, uint8_t *value) {
-    LRUNode *page = new LRUNode(key, value);
+SimpleCache::DoublyLinkedList::add_page_to_head(Addr key) {
+    LRUNode *page = new LRUNode(key);
     if (!front && !rear)
     {
         front = rear = page;
@@ -736,21 +746,21 @@ SimpleCache::DoublyLinkedList::move_page_to_head(LRUNode *page) {
 
 SimpleCache::LRUNode *
 SimpleCache::DoublyLinkedList::remove_rear_page() {
-    LRUNode *retNode;
+    LRUNode *retNode = new LRUNode(0);
     if (isEmpty())
     {
         return NULL;
     }
     if (front == rear)
     {
-        retNode = rear;
+        retNode->key = rear->key;
         //delete rear;
         front = rear = NULL;
     }
     else
     {
         //LRUNode *temp = rear;
-        retNode = rear;
+        retNode->key = rear->key;
         rear = rear->prev;
         rear->next = NULL;
         //delete temp;
@@ -771,29 +781,29 @@ SimpleCache::LRUCache::LRUCache(int capacity) {
     pageMap = map<Addr, LRUNode*>();
 }
 
-uint8_t*
-SimpleCache::LRUCache::get(Addr key) {
-    if (pageMap.find(key)==pageMap.end()) {
-        return NULL;
-    }
-    uint8_t *val = pageMap[key]->value;
+//uint8_t*
+//SimpleCache::LRUCache::get(Addr key) {
+    //if (pageMap.find(key)==pageMap.end()) {
+        //return NULL;
+    //}
+    //uint8_t *val = pageMap[key]->value;
 
     // move the page to front
-    pageList->move_page_to_head(pageMap[key]);
-    return val;
-}
+    //pageList->move_page_to_head(pageMap[key]);
+    //return val;
+//}
 
 SimpleCache::LRUNode *
 SimpleCache::LRUCache::put(Addr key, uint8_t *value) {
 
-    LRUNode *temp = NULL;
+    LRUNode *temp = new LRUNode(key);
 
-    if (pageMap.find(key)!=pageMap.end()) {
-        // if key already present, update value and move page to head
-        pageMap[key]->value = value;
-        pageList->move_page_to_head(pageMap[key]);
-        return temp;
-    }
+//    if (pageMap.find(key)!=pageMap.end()) {
+//        // if key already present, update value and move page to head
+//        //pageMap[key]->value = value;
+//        pageList->move_page_to_head(pageMap[key]);
+//        return temp;
+//    }
 
     if (size == capacity) {
         // remove rear page
@@ -804,11 +814,22 @@ SimpleCache::LRUCache::put(Addr key, uint8_t *value) {
     }
 
     // add new page to head to Queue
-    LRUNode *page = pageList->add_page_to_head(key, value);
+    LRUNode *page = pageList->add_page_to_head(key);
     size++;
     pageMap[key] = page;
 
     return temp;
+}
+
+Addr
+SimpleCache::LRUCache::rearrange_list(Addr key) {
+    auto block = pageMap.find(key);
+    if (block!=pageMap.end()) {
+        // if key already present, update value and move page to head
+        pageList->move_page_to_head(pageMap[key]);
+        return block->first;
+    }
+    return 0;
 }
 
 void
