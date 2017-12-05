@@ -1,0 +1,11 @@
+Settings:
+L1 Instruction size: 2kB
+L1 Data size:        2kB
+L2 Size:             4kB
+
+Idea was to compare this to simple cache 8kB size
+Then I realized we needed to change set associativity
+The default associativity is:
+L1 Inst: 2
+L1 Data: 2
+L2:      8

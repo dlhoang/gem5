@@ -1,0 +1,33 @@
+LRUprint1st
+
+---------- Begin Simulation Statistics ----------
+sim_seconds                                  0.004481                       # Number of seconds simulated
+sim_ticks                                  4480933500                       # Number of ticks simulated
+host_seconds                                     7.58                       # Real time elapsed on the host
+sim_insts                                     3798542                       # Number of instructions simulated
+sim_ops                                       7539744                       # Number of ops (including micro ops) simulated
+
+
+ ----- L1 Data Cache
+
+system.cpu.dcache.tags.replacements            190323                       # number of replacements
+system.cpu.dcache.overall_hits::cpu.data      1409888                       # number of overall hits
+system.cpu.dcache.overall_misses::cpu.data       190339                       # number of overall misses
+system.cpu.dcache.overall_accesses::cpu.data      1600227                       # number of overall (read+write) accesses
+system.cpu.dcache.overall_miss_rate::total     0.118945                       # miss rate for overall accesses
+
+ ----- L1 Instruction Cache
+
+system.cpu.icache.tags.replacements            426598                       # number of replacements
+system.cpu.icache.overall_hits::cpu.inst      4794052                       # number of overall hits
+system.cpu.icache.overall_misses::cpu.inst       426614                       # number of overall misses
+system.cpu.icache.overall_accesses::cpu.inst      5220666                       # number of overall (read+write) accesses
+system.cpu.icache.overall_miss_rate::total     0.081716                       # miss rate for overall accesses
+
+ ----- L2 Cache
+
+system.l2.tags.replacements                    879944                       # number of replacements
+system.l2.overall_hits::total                   48861                       # number of overall hits
+system.l2.overall_misses::total                568092                       # number of overall misses
+system.l2.overall_accesses::total              616953                       # number of overall (read+write) accesses
+system.l2.overall_miss_rate::total           0.920803                       # miss rate for overall accesses

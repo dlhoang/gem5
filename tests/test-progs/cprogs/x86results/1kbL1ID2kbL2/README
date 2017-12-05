@@ -1,0 +1,14 @@
+Experiment settings for this folder:
+build/X86/gem5.opt configs/example/se.py --caches --l2cache --l1i_size="1kB"
+--l1d_size="1kB" --l2_size="2kB" -c
+tests/test-progs/cprogs/x86executables/<program name>
+
+Default associativity 
+L1 Instruction Assoc: 2
+L1 Data Assoc:        2
+L2 Assoc:             8
+
+Cache sizes:
+L1 Instruction Size:  1kB
+L1 Data Size:         1kB
+L2 Cache Size:        2kB

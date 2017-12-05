@@ -1,0 +1,21 @@
+From gem5/configs/common/Options.py
+
+The default cache sizes for gem5 are:
+L1_Instruction: size 32kB
+L1_Data:        size 64kB
+L2 Cache:       size 2MB
+
+
+These sizes can be changed on the command line when running gem5:
+
+build/X86/gem5.opt configs/example.se.py --caches --l2cache --l1i_size="8kB"
+--l1d_size="16kB" --l2_size="64kB" -c
+tests/test-progs/cprogs/x86executables/<name>
+
+
+Default associativity:
+L1 Inst Assoc: 2
+L1 Data Assoc: 2
+L2 Assoc:      8
+
+
